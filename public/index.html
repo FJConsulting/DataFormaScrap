@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Scraper DataForma</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-slate-100">
+  <div class="bg-white shadow-xl rounded-xl p-8 w-full max-w-md space-y-6">
+    <h1 class="text-2xl font-bold text-center">Extraction DataForma</h1>
+
+    <label class="block text-sm font-medium">URL à scraper</label>
+    <input id="url" placeholder="ex. ws.dataforma.fr"
+           class="w-full border rounded px-3 py-2" />
+
+    <p class="text-xs text-gray-500">
+      Exemple de format d’URL : <em>ws.dataforma.fr</em>
+    </p>
+
+    <label class="block text-sm font-medium mt-4">Identifiant</label>
+    <input id="login" placeholder="ex. Fabien"
+           class="w-full border rounded px-3 py-2">
+
+    <label class="block text-sm font-medium mt-4">Mot de passe</label>
+    <input id="pwd" type="password" class="w-full border rounded px-3 py-2">
+
+    <button id="run"
+      class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg mt-6">
+      Lancer l'extraction
+    </button>
+
+    <p id="status" class="text-center text-sm text-gray-600"></p>
+  </div>
+
+  <script>
+    const run   = document.getElementById('run');
+    const state = document.getElementById('status');
+
+    run.onclick = async () => {
+      const rawUrl = document.getElementById('url').value.trim();
+      const payload = {
+        url  : rawUrl.replace(/^https?:\/\//,'').replace(/\/$/,''),
+        login: document.getElementById('login').value.trim(),
+        pwd  : document.getElementById('pwd').value.trim()
+      };
+      if (!payload.url || !payload.login || !payload.pwd) {
+        state.textContent = '🛑 URL, identifiant ou mot de passe manquant';
+        return;
+      }
+
+      state.textContent = '⏳ extraction en cours…';
+      run.disabled = true;
+
+      try {
+        const res = await fetch('/scrape', {
+          method : 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body   : JSON.stringify(payload)
+        });
+        if (!res.ok) throw new Error('Erreur serveur');
+
+        const blob = await res.blob();
+        const url  = window.URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url;
+        a.download = res.headers.get('x-filename') || 'Extraction Créneaux DataForma.csv';
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+        state.textContent = '✅ CSV téléchargé';
+      } catch(e) {
+        console.error(e);
+        state.textContent = '⚠️ extraction échouée';
+      }
+      run.disabled = false;
+    };
+  </script>
+</body>
+</html>
