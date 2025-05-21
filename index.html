@@ -33,6 +33,20 @@
   </div>
 
   <script>
+    // Génère la date au format Paris : YYYY_MM_DD_HH_mm
+    function getParisTimestamp() {
+      const now = new Date();
+      // Format YYYY_MM_DD_HH_mm
+      return now.toLocaleString('fr-FR', {
+        timeZone: 'Europe/Paris',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).replace(/(\d{2})\/(\d{2})\/(\d{4}),\s*(\d{2}):(\d{2})/, '$3_$2_$1_$4_$5');
+    }
+
     const run   = document.getElementById('run');
     const state = document.getElementById('status');
 
@@ -52,7 +66,7 @@
       run.disabled = true;
 
       try {
-        // POST vers ton Make Webhook
+        // POST vers Make Webhook
         const res = await fetch('https://hook.eu2.make.com/hrildn69xff1825ae9oj6ccer5gpcwbk', {
           method : 'POST',
           headers: { 'Content-Type':'application/json' },
@@ -75,9 +89,10 @@
         const a = document.createElement('a');
         a.href = window.URL.createObjectURL(blob);
 
-        // Extension dynamique si tu veux faire malin
+        // Extension dynamique selon le lien
         const ext = downloadUrl.includes('.xlsx') ? '.xlsx' : '.csv';
-        a.download = 'Extraction_Creneaux_DataForma' + ext;
+        const timestamp = getParisTimestamp();
+        a.download = `Extraction_Creneaux_DataForma_${timestamp}${ext}`;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => {
