@@ -90,7 +90,7 @@
         a.href = window.URL.createObjectURL(blob);
 
         const timestamp = getParisTimestamp();
-        a.download = `Extraction_Creneaux_DataForma_${timestamp}${ext}`;
+        a.download = `Extraction_Creneaux_DataForma_${timestamp}.xlsx`;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => {
