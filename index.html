@@ -33,47 +33,52 @@
   </div>
 
   <script>
-    const run   = document.getElementById('run');
-    const state = document.getElementById('status');
+  const run   = document.getElementById('run');
+  const state = document.getElementById('status');
 
-    run.onclick = async () => {
-      const rawUrl = document.getElementById('url').value.trim();
-      const payload = {
-        url  : rawUrl.replace(/^https?:\/\//,'').replace(/\/$/,''),
-        login: document.getElementById('login').value.trim(),
-        pwd  : document.getElementById('pwd').value.trim()
-      };
-      if (!payload.url || !payload.login || !payload.pwd) {
-        state.textContent = '🛑 URL, identifiant ou mot de passe manquant';
-        return;
-      }
-
-      state.textContent = '⏳ extraction en cours…';
-      run.disabled = true;
-
-      try {
-        const res = await fetch('https://hook.eu2.make.com/hrildn69xff1825ae9oj6ccer5gpcwbk', {
-          method : 'POST',
-          headers: { 'Content-Type':'application/json' },
-          body   : JSON.stringify(payload)
-        });
-        if (!res.ok) throw new Error('Erreur serveur');
-
-        const blob = await res.blob();
-        const url  = window.URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href = url;
-        a.download = res.headers.get('x-filename') || 'Extraction Créneaux DataForma.csv';
-        a.click();
-        window.URL.revokeObjectURL(url);
-
-        state.textContent = '✅ CSV téléchargé';
-      } catch(e) {
-        console.error(e);
-        state.textContent = '⚠️ extraction échouée';
-      }
-      run.disabled = false;
+  run.onclick = async () => {
+    const rawUrl = document.getElementById('url').value.trim();
+    const payload = {
+      url  : rawUrl.replace(/^https?:\/\//,'').replace(/\/$/,''),
+      login: document.getElementById('login').value.trim(),
+      pwd  : document.getElementById('pwd').value.trim()
     };
-  </script>
+    if (!payload.url || !payload.login || !payload.pwd) {
+      state.textContent = '🛑 URL, identifiant ou mot de passe manquant';
+      return;
+    }
+
+    state.textContent = '⏳ Extraction en cours…';
+    run.disabled = true;
+
+    try {
+      // Appel du webhook Make : attend JSON avec { downloadUrl: ... }
+      const res = await fetch('https://hook.eu2.make.com/hrildn69xff1825ae9oj6ccer5gpcwbk', {
+        method : 'POST',
+        headers: { 'Content-Type':'application/json' },
+        body   : JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error('Erreur serveur');
+      const data = await res.json();
+
+      if (!data.downloadUrl) throw new Error('Lien de téléchargement absent de la réponse');
+
+      // Création du lien de téléchargement et déclenchement automatique
+      const a = document.createElement('a');
+      a.href = data.downloadUrl;
+      a.download = 'Extraction_Creneaux_DataForma.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+
+      state.textContent = '✅ Fichier téléchargé';
+    } catch(e) {
+      console.error(e);
+      state.textContent = '⚠️ Extraction échouée';
+    }
+    run.disabled = false;
+  };
+</script>
 </body>
 </html>
