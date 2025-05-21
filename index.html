@@ -89,8 +89,10 @@
         const a = document.createElement('a');
         a.href = window.URL.createObjectURL(blob);
 
+        // Extension dynamique selon le lien
+        const ext = downloadUrl.includes('.xlsx') ? '.xlsx' : '.csv';
         const timestamp = getParisTimestamp();
-        a.download = `Extraction_Creneaux_DataForma_${timestamp}.xlsx`;
+        a.download = `Extraction_Creneaux_DataForma_${timestamp}${ext}`;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => {
